@@ -35,5 +35,5 @@ runs:
       run: |
         IMAGE_NAME_CLEANED=$(echo "${{ inputs.IMAGE_NAME }}" | sed 's|/|_|g')
         docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
-        docker tag baseimage:build ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/${ IMAGE_NAME_CLEANED }
-        docker push ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/${ IMAGE_NAME_CLEANED }
+        docker tag baseimage:build "${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/${IMAGE_NAME_CLEANED}"
+        docker "push ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/${ IMAGE_NAME_CLEANED }"
