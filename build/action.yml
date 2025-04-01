@@ -38,7 +38,7 @@ runs:
       shell: bash
       run: |
         IMAGE_TAG="${{ inputs.IMAGE_TAG }}"
-        IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|\(.*\)/\(.*\)|\1_\2|')
+        IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
         IMAGE_NAME_CLEANED="${{ inputs.IMAGE_NAME }}":$IMAGE_TAG_CLEANED
         IMAGE_FULL_NAME="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
         docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
