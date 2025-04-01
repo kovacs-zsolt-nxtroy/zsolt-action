@@ -31,7 +31,7 @@ runs:
     - name: Run az command in docker
       shell: bash
       run: |
-        IMAGE_TAG="${{ inputs.DOCKER_IMAGE_NAME }}"
+        IMAGE_TAG="${{ inputs.DOCKER_IMAGE_TAG }}"
         IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
         IMAGE_NAME_CLEANED="${{ inputs.DOCKER_IMAGE_NAME }}":$IMAGE_TAG_CLEANED
         IMAGE_FULL_NAME="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
