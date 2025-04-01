@@ -21,6 +21,10 @@ inputs:
     description: 'Image name'
     required: true
     default: ''
+  IMAGE_TAG:
+    description: 'Image tag'
+    required: true
+    default: ''
 runs:
   using: 'composite'
   steps:
@@ -33,11 +37,11 @@ runs:
     - name: Build
       shell: bash
       run: |
-        string="${{ inputs.IMAGE_NAME }}"
-        IMAGE_NAME_CLEANED=$(echo "$string" | sed 's|\(.*\)/\(.*\)|\1_\2|')        
-        echo $IMAGE_NAME_CLEANED
-        OKTA_VERSION="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
-        echo $OKTA_VERSION
+        IMAGE_TAG="${{ inputs.IMAGE_TAG }}"
+        IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|\(.*\)/\(.*\)|\1_\2|')
+        IMAGE_NAME_CLEANED="${{ inputs.IMAGE_NAME }}":$IMAGE_TAG_CLEANED
+        IMAGE_FULL_NAME="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
         docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
-        docker tag baseimage:build $OKTA_VERSION
-        docker push $OKTA_VERSION
+        docker tag baseimage:build IMAGE_FULL_NAME
+        docker push IMAGE_FULL_NAME
+        
