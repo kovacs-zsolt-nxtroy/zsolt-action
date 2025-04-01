@@ -35,4 +35,5 @@ runs:
         IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
         IMAGE_NAME_CLEANED="${{ inputs.DOCKER_IMAGE_NAME }}":$IMAGE_TAG_CLEANED
         IMAGE_FULL_NAME="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
+        echo $IMAGE_FULL_NAME
         docker run mcr.microsoft.com/azure-cli bash -c "${{inputs.AZURE_COMMAND_LOGIN}} && az containerapp update -n ${{ inputs.AZURE_INSTANCE_NAME }} -g ${{ inputs.AZURE_RESOURCE_GROUP_NAME }} --image $IMAGE_FULL_NAME  --set-env-vars VERSION=${{github.run_number}}"
