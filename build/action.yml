@@ -36,6 +36,8 @@ runs:
         string="${{ inputs.IMAGE_NAME }}"
         IMAGE_NAME_CLEANED=$(echo "$string" | sed 's|\(.*\)/\(.*\)|\1_\2|')        
         echo $IMAGE_NAME_CLEANED
+        OKTA_VERSION="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}"
+        echo $OKTA_VERSION
 #        docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
 #        docker tag baseimage:build ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED
 #        docker push ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED
