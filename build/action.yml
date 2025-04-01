@@ -33,10 +33,9 @@ runs:
     - name: Build
       shell: bash
       run: |
-#        IMAGE_NAME_CLEANED=$(echo "${{ inputs.IMAGE_NAME }}" | sed 's|/|_|g')
-        IMAGE_NAME_CLEANED=$(echo "${{ inputs.IMAGE_NAME }}" | sed 's|\(.*\)/\(.*\)|\1_\2|')
-        KORTE="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/${IMAGE_NAME_CLEANED}"
-        echo $KORTE
+        string="${{ inputs.IMAGE_NAME }}"
+        IMAGE_NAME_CLEANED=$(echo "$string" | sed 's|\(.*\)/\(.*\)|\1_\2|')        
+        echo $IMAGE_NAME_CLEANED
 #        docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
 #        docker tag baseimage:build ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED
 #        docker push ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED
