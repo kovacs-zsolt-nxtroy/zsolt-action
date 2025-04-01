@@ -1,0 +1,30 @@
+name: 'NexiusAI Deploy Action'
+description: 'NexiusAI Deploy to Azure Container App'
+inputs:
+  AZURE_COMMAND_LOGIN:
+    description: 'Azure login command'
+    required: true
+    default: ''
+  AZURE_INSTANCE_NAME:
+    description: 'Azure instance name'
+    required: true
+    default: ''
+  AZURE_RESOURCE_GROUP_NAME:
+    description: 'Azure resource group name'
+    required: true
+    default: ''
+  DOCKER_IMAGE_NAME:
+    description: 'Azure resource group name'
+    required: true
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Remove "/" from IMAGE_NAME
+      shell: bash
+      run: |
+        echo "IMAGE_NAME=${IMAGE_NAME//\//_}" >> $GITHUB_ENV
+    - name: Run az command in docker
+      shell: bash
+      run: |
+        docker run mcr.microsoft.com/azure-cli bash -c "${{input.AZURE_COMMAND_LOGIN}} && az containerapp update -n ${{ input.AZURE_INSTANCE_NAME }} -g ${{ input.AZURE_RESOURCE_GROUP_NAME_FEATURE }} --image ${{ input.DOCKER_IMAGE_NAME }}  --set-env-vars VERSION=${{github.run_number}}"
