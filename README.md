@@ -38,18 +38,20 @@ jobs:
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
           VERSION_PREFIX: '1.0'
           IMAGE_NAME: 'my-application-image'
+          IMAGE_TAG: 'latest'
 ```
 
 ### Bemeneti paraméterek
 A `NexiusAI Build Action` inputs:
 
-| Paraméter                    | Leírás                              | Kötelező | Alapértelmezett érték |
-|------------------------------|-------------------------------------|----------|-----------------------|
-| `DOCKER_REGISTRY_HOSTNAME`   | A Docker registry címe              | Igen     | `''`                 |
-| `DOCKER_USERNAME`            | A Docker Registry felhasználóneve   | Igen     | `''`                 |
-| `DOCKER_TOKEN`               | Docker token a hitelesítéshez       | Igen     | `''`                 |
-| `VERSION_PREFIX`             | Verzió előtag (pl. `1.0`)           | Nem      | `1.0`                |
-| `IMAGE_NAME`                 | Az image neve                       | Igen     | `''`                 |
+| Paraméter                  | Leírás                            | Kötelező | Alapértelmezett érték |
+|----------------------------|-----------------------------------|----------|-----------------------|
+| `DOCKER_REGISTRY_HOSTNAME` | A Docker registry címe            | Igen     | `''`                 |
+| `DOCKER_USERNAME`          | A Docker Registry felhasználóneve | Igen     | `''`                 |
+| `DOCKER_TOKEN`             | Docker token a hitelesítéshez     | Igen     | `''`                 |
+| `VERSION_PREFIX`           | Verzió előtag (pl. `1.0`)         | Nem      | `1.0`                |
+| `IMAGE_NAME`               | Az image neve                     | Igen     | `''`                 |
+| `IMAGE_TAG`                | Az image tag                      | Igen     | `''`                 |
 
 ### Főbb lépések
 - **Docker login**: Ellenőrzött belépés a Docker Registry-be.
@@ -83,17 +85,19 @@ jobs:
           AZURE_INSTANCE_NAME: "my-container-app"
           AZURE_RESOURCE_GROUP_NAME: "my-resource-group"
           DOCKER_IMAGE_NAME: "my-docker-image"
+          DOCKER_IMAGE_TAG: "latest"
 ```
 
 ### Inputs
 A `NexiusAI Deploy Action` inputs:
 
-| Paraméter                    | Leírás                                | Kötelező | Alapértelmezett érték |
-|------------------------------|---------------------------------------|----------|-----------------------|
-| `AZURE_COMMAND_LOGIN`        | Parancs az Azure CLI hitelesítéséhez  | Igen     | `''`                 |
-| `AZURE_INSTANCE_NAME`        | Az Azure Container App neve           | Igen     | `''`                 |
-| `AZURE_RESOURCE_GROUP_NAME`  | Az Azure Resource Group neve          | Igen     | `''`                 |
-| `DOCKER_IMAGE_NAME`          | A frissítéshez használt Docker image neve | Igen | `''`                 |
+| Paraméter                   | Leírás                                    | Kötelező | Alapértelmezett érték |
+|-----------------------------|-------------------------------------------|----------|-----------------------|
+| `AZURE_COMMAND_LOGIN`       | Parancs az Azure CLI hitelesítéséhez      | Igen     | `''`                 |
+| `AZURE_INSTANCE_NAME`       | Az Azure Container App neve               | Igen     | `''`                 |
+| `AZURE_RESOURCE_GROUP_NAME` | Az Azure Resource Group neve              | Igen     | `''`                 |
+| `DOCKER_IMAGE_NAME`         | A frissítéshez használt Docker image neve | Igen | `''`                 |
+| `DOCKER_IMAGE_TAG`          | A frissítéshez használt Docker image tag  | Igen | `''`                 |
 
 ### Főbb lépések
 - **Azure CLI hitelesítés**: Az Azure eléréséhez szükséges parancs futtatása.
