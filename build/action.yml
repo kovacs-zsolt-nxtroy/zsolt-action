@@ -35,7 +35,7 @@ runs:
       run: |
         IMAGE_NAME_CLEANED=$(echo "${{ inputs.IMAGE_NAME }}" | sed 's|/|_|g')
         IMAGE_NAME_CLEANED=$(echo "$string" | sed 's|\(.*\)/\(.*\)|\1_\2|')
-        ALMA=${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/${IMAGE_NAME_CLEANED}
+        ALMA="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/${IMAGE_NAME_CLEANED}"
         echo $ALMA
         echo ${IMAGE_NAME_CLEANED}
 #        docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
