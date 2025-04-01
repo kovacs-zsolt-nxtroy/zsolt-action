@@ -42,6 +42,6 @@ runs:
         IMAGE_NAME_CLEANED="${{ inputs.IMAGE_NAME }}":$IMAGE_TAG_CLEANED
         IMAGE_FULL_NAME="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
         docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
-        docker tag baseimage:build IMAGE_FULL_NAME
-        docker push IMAGE_FULL_NAME
+        docker tag baseimage:build $IMAGE_FULL_NAME
+        docker push $IMAGE_FULL_NAME
         
