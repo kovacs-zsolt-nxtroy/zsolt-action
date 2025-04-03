@@ -27,7 +27,7 @@ inputs:
     default: ''
   DOCKER_FILE_PATH:
     description: 'Docker file path'
-    required: true
+    required: false
     default: 'Dockerfile'
 runs:
   using: 'composite'
