@@ -16,6 +16,6 @@ jobs:
       - name: get
         run: docker pull nginx:alpine
       - name: beta
-        run: docker tag nginx:alpine crzsolt.azurecr.io/nginx:{{ github.run_number }}
+        run: docker tag nginx:alpine crzsolt.azurecr.io/nginx:${{ github.run_number }}
       - name: gamma
-        run: docker push crzsolt.azurecr.io/nginx:{{ github.run_number }}
+        run: docker push crzsolt.azurecr.io/nginx:${{ github.run_number }}
