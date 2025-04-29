@@ -19,7 +19,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build Docker Image
-        uses: nexius-learning/nexiusai-action/build@v3
+        uses: nexius-learning/nexiusai-action/build@v2
         with:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
