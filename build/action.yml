@@ -38,6 +38,10 @@ inputs:
     description: 'Docker target'
     required: false
     default: ''
+  INSTALL_AZ_CLI:
+    description: 'Install Azure CLI'
+    required: false
+    default: 'true'
 outputs:
   IMAGE_NAME_CLEANED_SIMPLE:
     description: 'Image name cleaned'
@@ -49,6 +53,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install dependencies
+      if: ${{inputs.INSTALL_AZ_CLI == 'true' }}
       shell: bash
       run: |
         sudo apt-get update
