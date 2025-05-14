@@ -1,37 +1,46 @@
-name: 'NexiusAI Deploy Action'
-description: 'NexiusAI Deploy to Azure Container App'
+name: 'NexiusAI Build Action'
+description: 'NexiusAI Build Action for Docker'
 inputs:
   AZURE_CLIENT_ID:
     description: 'Azure client ID'
     required: true
+    default: ''
   AZURE_CLIENT_SECRET:
     description: 'Azure client secret'
     required: true
+    default: ''
   AZURE_TENANT_ID:
     description: 'Azure tenant ID'
     required: true
+    default: ''
   AZURE_SUBSCRIPTION_ID:
     description: 'Azure subscription ID'
     required: true
+    default: ''
   AZURE_REGISTRY_NAME:
     description: 'Azure registry name'
     required: true
-  AZURE_INSTANCE_NAME:
-    description: 'Azure instance name'
-    required: true
-  AZURE_RESOURCE_GROUP_NAME:
-    description: 'Azure resource group name'
-    required: true
+    default: ''
+
   IMAGE_NAME:
-    description: 'Docker image name'
+    description: 'Image name'
     required: true
+    default: ''
   IMAGE_TAG:
-    description: 'Docker image tag'
+    description: 'Image tag'
     required: true
+    default: ''
   IMAGE_POSTFIX:
     description: 'Image Postfix'
     required: false
     default: ''
+  DOCKER_FILE:
+    description: 'Docker file path'
+    required: false
+    default: 'Dockerfile'
+  DOCKER_TARGET:
+    description: 'Docker target'
+    required: true
 runs:
   using: 'composite'
   steps:
@@ -44,11 +53,27 @@ runs:
     - name: Login to Azure
       shell: bash
       run: az login --service-principal -u ${{ inputs.AZURE_CLIENT_ID }} -p ${{ inputs.AZURE_CLIENT_SECRET }} --tenant ${{ inputs.AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.AZURE_SUBSCRIPTION_ID }}
-    - name: Update Azure Container App
+    - name: Login to Azure Container Registry
+      shell: bash
+      run: az acr login --name ${{ inputs.AZURE_REGISTRY_NAME }}
+    - name: Build
+      shell: bash
+      run: docker build --target ${{inputs.DOCKER_TARGET}} -t baseimage:build  -f ${{inputs.DOCKER_FILE}} .
+    - name: Push Image Simple Name
+      shell: bash
+      run: |
+        IMAGE_TAG="${{ inputs.IMAGE_TAG }}"
+        IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
+        IMAGE_NAME_CLEANED="${{ inputs.IMAGE_NAME }}":$IMAGE_TAG_CLEANED
+        IMAGE_FULL_NAME="${{ inputs.AZURE_REGISTRY_NAME }}/$IMAGE_NAME_CLEANED"
+        docker tag baseimage:build $IMAGE_FULL_NAME
+        docker push $IMAGE_FULL_NAME
+    - name: Push Image With Postfix
       shell: bash
       run: |
         IMAGE_TAG="${{ inputs.IMAGE_TAG }}_${{ inputs.IMAGE_POSTFIX }}"
         IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
         IMAGE_NAME_CLEANED="${{ inputs.IMAGE_NAME }}":$IMAGE_TAG_CLEANED
         IMAGE_FULL_NAME="${{ inputs.AZURE_REGISTRY_NAME }}/$IMAGE_NAME_CLEANED"
-        az containerapp update -n ${{ inputs.AZURE_INSTANCE_NAME }} -g ${{ inputs.AZURE_RESOURCE_GROUP_NAME }} --image $IMAGE_FULL_NAME  --set-env-vars VERSION_NUMBER_PATCH=${{github.run_number}}
+        docker tag baseimage:build $IMAGE_FULL_NAME
+        docker push $IMAGE_FULL_NAME

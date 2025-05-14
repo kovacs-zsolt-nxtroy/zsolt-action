@@ -1,0 +1,9 @@
+name: 'NexiusAI Build Action'
+description: 'NexiusAI Build Action for Docker'
+runs:
+  using: 'composite'
+  steps:
+
+    - name: Test Hello World
+      shell: bash
+      run: echo "Hello World"

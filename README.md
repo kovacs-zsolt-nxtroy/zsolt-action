@@ -1,111 +1,79 @@
-# Nexius AI GitHub Actions
+# NexiusAI GitHub Actions
 
-Ez a **NexiusAI** számára készült egyedi GitHub Action-ök
-
-## Tartalomjegyzék
-- **[NexiusAI Build Action](#nexiusai-build-action)**: Docker image build és upload egy Docker Registry-be.
-- **[NexiusAI Deploy Action](#nexiusai-deploy-action)**: Azure Container App frissítése a legújabb Docker image alapján.
-
----
+Ez a repository két GitHub Action-t tartalmaz az Azure Container Apps szolgáltatáshoz való build és deploy folyamatokhoz.
 
 ## NexiusAI Build Action
 
-### Leírás
-A `NexiusAI Build Action` segítségével automatizálhatod a Docker image-ek build-elése, a verziózásukat és feltöltésüket a Docker Registry-be.
-
-### Használati példa
-
-```yaml
-name: Docker Build Workflow
-
-on: 
-  push:
-    branches:
-      - main
-
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fetch code
-        uses: actions/checkout@v3
-
-      - name: Docker image build and push
-        uses: nexius-learning/nexiusai-action/build@main
-        with:
-          DOCKER_REGISTRY_HOSTNAME: 'my-docker-registry.com'
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-          VERSION_PREFIX: '1.0'
-          IMAGE_NAME: 'my-application-image'
-          IMAGE_TAG: 'latest'
-```
+Ez az action Docker image-eket épít és feltölti azokat az Azure Container Registry-be.
 
 ### Bemeneti paraméterek
-A `NexiusAI Build Action` inputs:
 
-| Paraméter                  | Leírás                            | Kötelező | Alapértelmezett érték |
-|----------------------------|-----------------------------------|----------|-----------------------|
-| `DOCKER_REGISTRY_HOSTNAME` | A Docker registry címe            | Igen     | `''`                 |
-| `DOCKER_USERNAME`          | A Docker Registry felhasználóneve | Igen     | `''`                 |
-| `DOCKER_TOKEN`             | Docker token a hitelesítéshez     | Igen     | `''`                 |
-| `VERSION_PREFIX`           | Verzió előtag (pl. `1.0`)         | Nem      | `1.0`                |
-| `IMAGE_NAME`               | Az image neve                     | Igen     | `''`                 |
-| `IMAGE_TAG`                | Az image tag                      | Igen     | `''`                 |
+| Paraméter             | Leírás                                                                                 | Kötelező |
+|-----------------------|----------------------------------------------------------------------------------------|----------|
+| AZURE_CLIENT_ID       | Azure szolgáltatásnév kliens azonosítója                                               | Igen |
+| AZURE_CLIENT_SECRET   | Azure szolgáltatásnév titkos kulcsa                                                    | Igen |
+| AZURE_TENANT_ID       | Azure tenant azonosító                                                                 | Igen |
+| AZURE_SUBSCRIPTION_ID | Azure előfizetés azonosító                                                             | Igen |
+| AZURE_REGISTRY_NAME   | Azure Container Registry neve                                                          | Igen |
+| BUILD_EXTRA_PARAMETER | Itt lehet megtadni extra paramétereket a buid-nek. vigyázz, nincs szintaxis ellenörzés | Nem |
+| IMAGE_NAME            | Docker image neve                                                                      | Igen |
+| IMAGE_TAG             | Docker image tag                                                                       | Igen |
+| IMAGE_POSTFIX         | Opcionális utótag az image tag-hez                                                     | Nem |
+| DOCKER_FILE           | Dockerfile elérési útja (alapértelmezett: 'Dockerfile')                                | Nem |
+| DOCKER_TARGET         | Docker build Target opció                                                              | Nem |
 
-### Főbb lépések
-- **Docker login**: Ellenőrzött belépés a Docker Registry-be.
-- **Build**: Docker image építése és verziószám beállítása a `VERSION_PREFIX` alapján.
-- **Tagelés**: Az image elnevezése a Registry és az `IMAGE_NAME` alapján.
-- **Push**: Az elkészült image feltöltése a megadott Docker Registry-be.
 
----
 
 ## NexiusAI Deploy Action
 
-### Leírás
-A `NexiusAI Deploy Action` lehetővé teszi egy Azure Container App frissítését az aktuális verziójú Docker image segítségével. Ez az action automatizálja az Azure CLI parancsok futtatását, így egyszerűsíti a telepítési folyamatot.
+Ez az action telepíti a Docker image-et az Azure Container Apps szolgáltatásba.
 
-### Használati példa
+### Bemeneti paraméterek
 
-```yaml
-name: Deploy Workflow
+| Paraméter | Leírás | Kötelező |
+|-----------|--------|----------|
+| AZURE_CLIENT_ID | Azure szolgáltatásnév kliens azonosítója | Igen |
+| AZURE_CLIENT_SECRET | Azure szolgáltatásnév titkos kulcsa | Igen |
+| AZURE_TENANT_ID | Azure tenant azonosító | Igen |
+| AZURE_SUBSCRIPTION_ID | Azure előfizetés azonosító | Igen |
+| AZURE_REGISTRY_NAME | Azure Container Registry neve | Igen |
+| AZURE_INSTANCE_NAME | Azure Container App példány neve | Igen |
+| AZURE_RESOURCE_GROUP_NAME | Azure erőforráscsoport neve | Igen |
+| IMAGE_NAME | Docker image neve | Igen |
+| IMAGE_TAG | Docker image tag | Igen |
+| IMAGE_POSTFIX | Opcionális utótag az image tag-hez | Nem |
 
-on: 
-  workflow_dispatch:
+## NexiusAI Image Copy
 
-jobs:
-  deploy-to-azure:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Azure Container App frissítése
-        uses: nexius-learning/nexiusai-action/deploy@main
-        with:
-          AZURE_COMMAND_LOGIN: "az login --service-principal -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT }}"
-          AZURE_INSTANCE_NAME: "my-container-app"
-          AZURE_RESOURCE_GROUP_NAME: "my-resource-group"
-          DOCKER_IMAGE_NAME: "my-docker-image"
-          DOCKER_IMAGE_TAG: "latest"
-```
+Ez az action a megadott Docker image-et átmásolja az Azure Container Registry-ből egy másik Azure Container Registry-be.
 
-### Inputs
-A `NexiusAI Deploy Action` inputs:
+### Bemeneti paraméterek
 
-| Paraméter                   | Leírás                                    | Kötelező | Alapértelmezett érték |
-|-----------------------------|-------------------------------------------|----------|-----------------------|
-| `AZURE_COMMAND_LOGIN`       | Parancs az Azure CLI hitelesítéséhez      | Igen     | `''`                 |
-| `AZURE_INSTANCE_NAME`       | Az Azure Container App neve               | Igen     | `''`                 |
-| `AZURE_RESOURCE_GROUP_NAME` | Az Azure Resource Group neve              | Igen     | `''`                 |
-| `DOCKER_IMAGE_NAME`         | A frissítéshez használt Docker image neve | Igen | `''`                 |
-| `DOCKER_IMAGE_TAG`          | A frissítéshez használt Docker image tag  | Igen | `''`                 |
+| Paraméter                    | Leírás                                          | Kötelező |
+|------------------------------|-------------------------------------------------|----------|
+| SOURCE_AZURE_CLIENT_ID       | Forrás Azure szolgáltatásnév kliens azonosítója | Igen |
+| SOURCE_AZURE_CLIENT_SECRET   | Forrás Azure szolgáltatásnév titkos kulcsa      | Igen |
+| SOURCE_AZURE_TENANT_ID       | Forrás Azure tenant azonosító                   | Igen |
+| SOURCE_AZURE_SUBSCRIPTION_ID | Forrás Azure előfizetés azonosító               | Igen |
+| SOURCE_AZURE_REGISTRY_NAME   | Forrás Azure Container Registry neve            | Igen |
+| TARGET_AZURE_CLIENT_ID       | Cél Azure szolgáltatásnév kliens azonosítója    | Igen |
+| TARGET_AZURE_CLIENT_SECRET   | Cél Azure szolgáltatásnév titkos kulcsa      | Igen |
+| TARGET_AZURE_TENANT_ID       | Cél Azure tenant azonosító                   | Igen |
+| TARGET_AZURE_SUBSCRIPTION_ID | Cél Azure előfizetés azonosító               | Igen |
+| TARGET_AZURE_REGISTRY_NAME   | Cél Azure Container Registry neve            | Igen |
+| IMAGE_NAME | Docker image neve                               | Igen |
 
-### Főbb lépések
-- **Azure CLI hitelesítés**: Az Azure eléréséhez szükséges parancs futtatása.
-- **Container App frissítése**: A megadott Docker image beállítása az Azure-ban, környezeti változók frissítésével együtt.
+## Előfeltételek
 
----
+- Azure előfizetés
+- Azure Container Registry
+- Azure Container Apps szolgáltatás
+- Azure szolgáltatásnév megfelelő jogosultságokkal
 
-## Fejlesztői tippek
-1. **Érzékeny adatok kezelése**: Az olyan érzékeny adatokat, mint a `DOCKER_TOKEN` és az `AZURE_PASSWORD`, a GitHub Secrets tárolja, hogy biztosítsd azok védelmét.
-2. **Hibakeresés**: Ha az action végrehajtása során hibák lépnek fel, használd a `GITHUB_ENV` változót és naplózz minden szükséges adatot.
-3. **Tesztkörnyezet használata**: Mielőtt a főágon futtatnád az action-öket, teszteld azokat külön ágon vagy sandbox környezetben.
+## Biztonság
+
+A titkos értékeket (AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, stb.) mindig GitHub Secrets-ként tárolja és használja!
+
+## Verziókezelés
+
+A deploy action automatikusan hozzáad egy VERSION környezeti változót a konténerhez a GitHub run number értékével.

@@ -1,47 +1,92 @@
 name: 'NexiusAI Build Action'
 description: 'NexiusAI Build Action for Docker'
 inputs:
-  DOCKER_REGISTRY_HOSTNAME:
-    description: 'Docker registry hostname'
+  AZURE_CLIENT_ID:
+    description: 'Azure client ID'
     required: true
+  AZURE_CLIENT_SECRET:
+    description: 'Azure client secret'
+    required: true
+  AZURE_TENANT_ID:
+    description: 'Azure tenant ID'
+    required: true
+  AZURE_SUBSCRIPTION_ID:
+    description: 'Azure subscription ID'
+    required: true
+  AZURE_REGISTRY_NAME:
+    description: 'Azure registry name'
+    required: true
+  BUILD_EXTRA_PARAMETER:
+    description: 'Docker build extra parameters'
+    required: false
     default: ''
-  DOCKER_USERNAME:
-    description: 'Docker username'
-    required: true
-    default: ''
-  DOCKER_TOKEN:
-    description: 'Docker token'
-    required: true
-    default: ''
-  VERSION_PREFIX:
-    description: 'Version prefix'
-    required: true
-    default: '1.0'
   IMAGE_NAME:
     description: 'Image name'
     required: true
-    default: ''
   IMAGE_TAG:
     description: 'Image tag'
     required: true
+  IMAGE_POSTFIX:
+    description: 'Image Postfix'
+    required: false
     default: ''
+  DOCKER_FILE:
+    description: 'Docker file path'
+    required: false
+    default: 'Dockerfile'
+  DOCKER_TARGET:
+    description: 'Docker target'
+    required: false
+    default: ''
+outputs:
+  IMAGE_NAME_CLEANED_SIMPLE:
+    description: 'Image name cleaned'
+    value: ${{ steps.imageSimple.outputs.IMAGE_NAME_CLEANED_SIMPLE }}
+  IMAGE_NAME_CLEANED_POSTFIX:
+    description: 'Image name with postfix cleaned'
+    value: ${{ steps.ImageWithPostfix.outputs.IMAGE_NAME_CLEANED_POSTFIX }}
 runs:
   using: 'composite'
   steps:
-    - name: Docker login
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ inputs.DOCKER_REGISTRY_HOSTNAME }}
-        username: ${{ inputs.DOCKER_USERNAME }}
-        password: ${{ inputs.DOCKER_TOKEN }}
-    - name: Build
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    - name: Login to Azure
+      shell: bash
+      run: az login --service-principal -u ${{ inputs.AZURE_CLIENT_ID }} -p ${{ inputs.AZURE_CLIENT_SECRET }} --tenant ${{ inputs.AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.AZURE_SUBSCRIPTION_ID }}
+    - name: Login to Azure Container Registry
+      shell: bash
+      run: az acr login --name ${{ inputs.AZURE_REGISTRY_NAME }}
+    - name: Build without target
+      if : ${{ inputs.DOCKER_TARGET == '' }}
+      shell: bash
+      run: docker build ${{inputs.BUILD_EXTRA_PARAMETER}} --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" -t baseimage:build -f ${{inputs.DOCKER_FILE}}  .
+    - name: Build with target
+      if : ${{ inputs.DOCKER_TARGET != '' }}
+      shell: bash
+      run: docker build ${{inputs.BUILD_EXTRA_PARAMETER}} --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" -t baseimage:build -f ${{inputs.DOCKER_FILE}}  .
+    - name: Push Image Simple Name
+      id: imageSimple
       shell: bash
       run: |
         IMAGE_TAG="${{ inputs.IMAGE_TAG }}"
         IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
         IMAGE_NAME_CLEANED="${{ inputs.IMAGE_NAME }}":$IMAGE_TAG_CLEANED
-        IMAGE_FULL_NAME="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
-        docker build -t baseimage:build --build-arg="VERSION_PATCH=${{inputs.VERSION_PREFIX}}.${{github.run_number}}" .
+        IMAGE_FULL_NAME="${{ inputs.AZURE_REGISTRY_NAME }}/$IMAGE_NAME_CLEANED"
+        echo "IMAGE_NAME_CLEANED_SIMPLE=$IMAGE_NAME_CLEANED" >> $GITHUB_OUTPUT
         docker tag baseimage:build $IMAGE_FULL_NAME
         docker push $IMAGE_FULL_NAME
-        
+    - name: Push Image With Postfix
+      id: ImageWithPostfix
+      shell: bash
+      run: |
+        IMAGE_TAG="${{ inputs.IMAGE_TAG }}_${{ inputs.IMAGE_POSTFIX }}"
+        IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
+        IMAGE_NAME_CLEANED="${{ inputs.IMAGE_NAME }}":$IMAGE_TAG_CLEANED
+        IMAGE_FULL_NAME="${{ inputs.AZURE_REGISTRY_NAME }}/$IMAGE_NAME_CLEANED"
+        echo "IMAGE_NAME_CLEANED_POSTFIX=$IMAGE_NAME_CLEANED" >> $GITHUB_OUTPUT
+        docker tag baseimage:build $IMAGE_FULL_NAME
+        docker push $IMAGE_FULL_NAME

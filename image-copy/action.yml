@@ -1,0 +1,68 @@
+name: 'NexiusAI Docker Image Copy'
+description: 'Docker Image Copy From Container Registry to Other Registry'
+inputs:
+  SOURCE_AZURE_CLIENT_ID:
+    description: 'Source Azure client ID'
+    required: true
+  SOURCE_AZURE_CLIENT_SECRET:
+    description: 'Source Azure client secret'
+    required: true
+  SOURCE_AZURE_TENANT_ID:
+    description: 'Source Azure tenant ID'
+    required: true
+  SOURCE_AZURE_SUBSCRIPTION_ID:
+    description: 'Source Azure subscription ID'
+    required: true
+  SOURCE_AZURE_REGISTRY_NAME:
+    description: 'Source Azure registry name'
+    required: true
+  IMAGE_NAME:
+    description: 'Image name'
+    required: true
+  
+  TARGET_AZURE_CLIENT_ID:
+    description: 'Target Azure client ID'
+    required: true
+  TARGET_AZURE_CLIENT_SECRET:
+    description: 'Target Azure client secret'
+    required: true
+  TARGET_AZURE_TENANT_ID:
+    description: 'Target Azure tenant ID'
+    required: true
+  TARGET_AZURE_SUBSCRIPTION_ID:
+    description: 'Target Azure subscription ID'
+    required: true
+  TARGET_AZURE_REGISTRY_NAME:
+    description: 'Target Azure registry name'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    - name: Login to Azure
+      shell: bash
+      run: az login --service-principal -u ${{ inputs.SOURCE_AZURE_CLIENT_ID }} -p ${{ inputs.SOURCE_AZURE_CLIENT_SECRET }} --tenant ${{ inputs.SOURCE_AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.SOURCE_AZURE_SUBSCRIPTION_ID }}
+    - name: Login to Azure Container Registry
+      shell: bash
+      run: az acr login --name ${{ inputs.SOURCE_AZURE_REGISTRY_NAME }}
+    - name: Pull Image
+      shell: bash
+      run: docker pull ${{inputs.SOURCE_AZURE_REGISTRY_NAME}}/${{inputs.IMAGE_NAME}}
+    - name: Change Tag Image
+      shell: bash
+      run: docker tag ${{inputs.SOURCE_AZURE_REGISTRY_NAME}}/${{inputs.IMAGE_NAME}} ${{inputs.TARGET_AZURE_REGISTRY_NAME}}/${{inputs.IMAGE_NAME}}
+
+    - name: Login to Target Azure
+      shell: bash
+      run: az login --service-principal -u ${{ inputs.TARGET_AZURE_CLIENT_ID }} -p ${{ inputs.TARGET_AZURE_CLIENT_SECRET }} --tenant ${{ inputs.TARGET_AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.TARGET_AZURE_SUBSCRIPTION_ID }}
+    - name: Login to Target Azure Container Registry
+      shell: bash
+      run: az acr login --name ${{ inputs.TARGET_AZURE_REGISTRY_NAME }}
+    - name: Change Tag Image
+      shell: bash
+      run: docker push ${{inputs.TARGET_AZURE_REGISTRY_NAME}}/${{inputs.IMAGE_NAME}}

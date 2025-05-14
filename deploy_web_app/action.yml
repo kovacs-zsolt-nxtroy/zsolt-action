@@ -1,0 +1,52 @@
+name: 'NexiusAI Deploy Action'
+description: 'NexiusAI Deploy to Web App'
+inputs:
+  AZURE_CLIENT_ID:
+    description: 'Azure client ID'
+    required: true
+    default: ''
+  AZURE_CLIENT_SECRET:
+    description: 'Azure client secret'
+    required: true
+    default: ''
+  AZURE_TENANT_ID:
+    description: 'Azure tenant ID'
+    required: true
+    default: ''
+  AZURE_SUBSCRIPTION_ID:
+    description: 'Azure subscription ID'
+    required: true
+    default: ''
+  AZURE_INSTANCE_NAME:
+    description: 'Azure instance name'
+    required: true
+    default: ''
+  AZURE_RESOURCE_GROUP_NAME:
+    description: 'Azure resource group name'
+    required: true
+    default: ''
+  DOCKER_IMAGE_NAME:
+    description: 'Docker image name'
+    required: true
+    default: ''
+  DOCKER_IMAGE_TAG:
+    description: 'Docker image tag'
+    required: true
+    default: ''
+  DOCKER_REGISTRY_HOSTNAME:
+    description: 'Docker registry hostname'
+    required: true
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Update Azure Web App
+      shell: bash
+      run: |
+        IMAGE_TAG="${{ inputs.DOCKER_IMAGE_TAG }}"
+        IMAGE_TAG_CLEANED=$(echo "$IMAGE_TAG" | sed 's|/|_|g')
+        IMAGE_NAME_CLEANED="${{ inputs.DOCKER_IMAGE_NAME }}":$IMAGE_TAG_CLEANED
+        IMAGE_FULL_NAME="${{ inputs.DOCKER_REGISTRY_HOSTNAME }}/$IMAGE_NAME_CLEANED"
+        docker run mcr.microsoft.com/azure-cli bash -c "az login --service-principal -u ${{ inputs.AZURE_CLIENT_ID }} -p ${{ inputs.AZURE_CLIENT_SECRET }} --tenant ${{ inputs.AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.AZURE_SUBSCRIPTION_ID }} && az webapp config appsettings set -n ${{ inputs.AZURE_INSTANCE_NAME }} -g ${{ inputs.AZURE_RESOURCE_GROUP_NAME }} --settings \"VERSION=${{github.run_number}}\" "
+        docker run mcr.microsoft.com/azure-cli bash -c "az login --service-principal -u ${{ inputs.AZURE_CLIENT_ID }} -p ${{ inputs.AZURE_CLIENT_SECRET }} --tenant ${{ inputs.AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.AZURE_SUBSCRIPTION_ID }} && az webapp config container set -n ${{ inputs.AZURE_INSTANCE_NAME }} -g ${{ inputs.AZURE_RESOURCE_GROUP_NAME }} --container-image-name $IMAGE_FULL_NAME "
+        docker run mcr.microsoft.com/azure-cli bash -c "az login --service-principal -u ${{ inputs.AZURE_CLIENT_ID }} -p ${{ inputs.AZURE_CLIENT_SECRET }} --tenant ${{ inputs.AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.AZURE_SUBSCRIPTION_ID }} && az webapp restart -n ${{ inputs.AZURE_INSTANCE_NAME }} -g ${{ inputs.AZURE_RESOURCE_GROUP_NAME }} "

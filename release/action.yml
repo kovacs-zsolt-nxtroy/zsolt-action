@@ -1,0 +1,79 @@
+name: 'NexiusAI Deploy Action'
+description: 'NexiusAI Deploy to Azure Container App'
+inputs:
+  AZURE_CLIENT_ID:
+    description: 'Azure client ID'
+    required: true
+    default: ''
+  AZURE_CLIENT_SECRET:
+    description: 'Azure client secret'
+    required: true
+    default: ''
+  AZURE_TENANT_ID:
+    description: 'Azure tenant ID'
+    required: true
+    default: ''
+  SOURCE_AZURE_SUBSCRIPTION_ID:
+    description: 'Azure subscription ID'
+    required: true
+    default: ''
+  TARGET_AZURE_CONTAINER_USERNAME:
+    description: 'Azure container username'
+    required: true
+    default: ''
+  TARGET_AZURE_CONTAINER_PASSWORD:
+    description: 'Azure container password'
+    required: true
+    default: ''
+  SOURCE_AZURE_REGISTRY_NAME:
+    description: 'Source Azure registry name'
+    required: true
+    default: ''
+  TARGET_AZURE_REGISTRY_NAME:
+    description: 'Target Azure registry name'
+    required: true
+    default: ''
+  AZURE_INSTANCE_NAME:
+    description: 'Azure instance name'
+    required: true
+    default: ''
+  AZURE_RESOURCE_GROUP_NAME:
+    description: 'Azure resource group name'
+    required: true
+    default: ''
+  IMAGE_NAME:
+    description: 'Docker image name'
+    required: true
+    default: ''
+  TARGET_VERSION_NUMBER:
+    description: 'Target version number'
+    required: true
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    - name: Login to Azure
+      shell: bash
+      run: |
+        az login --service-principal -u ${{ inputs.AZURE_CLIENT_ID }} -p ${{ inputs.AZURE_CLIENT_SECRET }} --tenant ${{ inputs.AZURE_TENANT_ID }} && az account set --subscription ${{ inputs.SOURCE_AZURE_SUBSCRIPTION_ID }}
+        az acr login --name ${{ inputs.SOURCE_AZURE_REGISTRY_NAME }}
+
+    - name: Update Azure Container App
+      shell: bash
+      run: |
+        SOURCE_IMAGE_FULL_NAME="${{ inputs.SOURCE_AZURE_REGISTRY_NAME }}/${{ inputs.IMAGE_NAME }}:main"
+        TARGET_IMAGE_FULL_NAME="${{ inputs.TARGET_AZURE_REGISTRY_NAME }}/${{ inputs.IMAGE_NAME }}:release"
+        TARGET_IMAGE_FULL_NAME_VERSION="${{ inputs.TARGET_AZURE_REGISTRY_NAME }}/${{ inputs.IMAGE_NAME }}:${{inputs.TARGET_VERSION_NUMBER}}"
+        docker pull $SOURCE_IMAGE_FULL_NAME
+        docker login -u ${{ inputs.TARGET_AZURE_CONTAINER_USERNAME }} -p ${{ inputs.TARGET_AZURE_CONTAINER_PASSWORD }} ${{ inputs.TARGET_AZURE_REGISTRY_NAME }}
+        docker tag $SOURCE_IMAGE_FULL_NAME $TARGET_IMAGE_FULL_NAME
+        docker tag $SOURCE_IMAGE_FULL_NAME $TARGET_IMAGE_FULL_NAME_VERSION
+        docker push $TARGET_IMAGE_FULL_NAME
+        docker push $TARGET_IMAGE_FULL_NAME_VERSION
+        
